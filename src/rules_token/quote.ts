@@ -1,5 +1,6 @@
 import { ITokenizer, TokenRule } from "../types/token"
-const re = /^\[qt\]\[qtmeta aid=(\d+) time=(\d+)\]/
+const re =
+  /^((\[qt\]\[qtmeta aid=(\d+) time=(\d+)\])|([引用 aid=(\d+) time=(\d+)]))/
 export const qtOpen: TokenRule = (
   len: number,
   src: string,
@@ -50,7 +51,11 @@ export const qtClose: TokenRule = (
   t: ITokenizer,
   silent: Boolean
 ): Boolean => {
-  if (len - t.pos < 5 || src.slice(t.pos, t.pos + 5) !== "[/qt]") {
+  if (
+    len - t.pos < 5 ||
+    src.slice(t.pos, t.pos + 5) !== "[/qt]" ||
+    src.slice(t.pos, t.pos + 5) !== "[/引用]"
+  ) {
     return false
   }
   if (silent) {
