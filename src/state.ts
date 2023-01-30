@@ -32,6 +32,11 @@ class State implements IState {
               return false
             }
             break
+          case "code":
+            if (type !== "code_close") {
+              return false
+            }
+            break
           case "root":
             return false
           default:

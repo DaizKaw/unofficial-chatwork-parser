@@ -13,6 +13,8 @@ export type TokenType =
   | "quote_open"
   | "quote_close"
   | "eof"
+  | "code_open"
+  | "code_close"
 interface Position {
   start: number
   end: number

@@ -1,6 +1,7 @@
 import { Link, Text, ThematicBreak } from "mdast"
 import { Point } from "unist"
 import {
+  Code,
   Content,
   Info,
   InfoBody,
@@ -31,7 +32,8 @@ const parseRoot: parse = (
     token.type !== "eof" &&
     !state.contains(parentType, token.type) &&
     !state.contains("title", token.type) &&
-    !state.contains("quote", token.type)
+    !state.contains("quote", token.type) &&
+    !state.contains("code", token.type)
   ) {
     switch (token.type) {
       case "hr":
@@ -55,6 +57,9 @@ const parseRoot: parse = (
       case "quote_open":
         parseQuote(state, level, t, parentType, contents)
         break
+      case "code_open":
+        parseCode(state, level, t, parentType, contents)
+        break
       case "link":
         parseLink(state, level, t, parentType, contents)
         break
@@ -63,6 +68,7 @@ const parseRoot: parse = (
       case "title_open":
       case "title_close":
       case "quote_close":
+      case "code_close":
         parseText(state, level, t, parentType, contents)
         break
       default:
@@ -88,10 +94,12 @@ const parseText: parse = (
       token.type === "info_close" ||
       token.type === "title_open" ||
       token.type === "title_close" ||
-      token.type === "quote_close") &&
+      token.type === "quote_close" ||
+      token.type === "code_close") &&
     !state.contains("info", token.type) &&
     !state.contains("title", token.type) &&
-    !state.contains("quote", token.type)
+    !state.contains("quote", token.type) &&
+    !state.contains("code", token.type)
   ) {
     endToken = t.next()
   }
@@ -618,5 +626,91 @@ const parseQuote: parse = (
     }
     contents.push(content)
     Array.prototype.push.apply(contents, qtContents)
+  }
+}
+
+const parseCode: parse = (
+  state: IState,
+  level: number,
+  t: ITokenizer,
+  parentType: ParentType,
+  contents: Content[]
+): void => {
+  let codeContents: Content[] = []
+  let start: [Token] = [t.next()]
+  state.push("code")
+  parseRoot(state, level + 1, t, "code", codeContents)
+  if (state.valid(level + 1) && t.peek().type === "code_close") {
+    state.pop()
+    const close: Token = t.next()
+    if (codeContents.length === 0) {
+      let content: Plain = {
+        type: "plain",
+        value: t.src.slice(start[0].position.start, close.position.end),
+        position: {
+          start: {
+            line: -1,
+            column: -1,
+            offset: start[0].position.start,
+          },
+          end: {
+            line: -1,
+            column: -1,
+            offset: close.position.end,
+          },
+        },
+      }
+      contents.push(content)
+      return
+    }
+    if (codeContents[0].type === "plain") {
+      let start: Point = codeContents[0].position!.start
+      let end: Point = codeContents[0].position!.end
+      const n = codeContents.length
+      let i = 0
+      while (i < n && codeContents[i].type === "plain") {
+        end = codeContents[i].position!.end
+        i++
+      }
+      codeContents = codeContents.slice(i)
+      let content: Plain = {
+        type: "plain",
+        value: t.src.slice(start.offset!, end.offset!),
+        position: {
+          start,
+          end,
+        },
+      }
+      codeContents.unshift(content)
+    }
+    let content: Code = {
+      type: "code",
+      children: codeContents,
+    }
+    contents.push(content)
+  } else {
+    const startPoint: Point = {
+      line: -1,
+      column: -1,
+      offset: start[0].position.start,
+    }
+    let endPoint: Point = {
+      line: -1,
+      column: -1,
+      offset: start[0].position.end,
+    }
+    if (codeContents.length > 0 && codeContents[0].type === "plain") {
+      endPoint = codeContents.shift()!.position!.end
+    }
+    let content: Plain = {
+      type: "plain",
+      value: t.src.slice(startPoint.offset!, endPoint.offset!),
+      position: {
+        start: startPoint,
+        end: endPoint,
+      },
+    }
+    contents.push(content)
+    Array.prototype.push.apply(contents, codeContents)
   }
 }
