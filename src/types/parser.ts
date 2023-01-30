@@ -1,7 +1,7 @@
 import { Content } from "./node"
 import { ITokenizer, TokenType } from "./token"
 
-export type ParentType = "root" | "info" | "quote" | "title"
+export type ParentType = "root" | "info" | "quote" | "title" | "code"
 export type parse = (
   state: IState,
   level: number,

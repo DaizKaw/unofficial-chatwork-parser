@@ -1,6 +1,7 @@
 import LinkifyIt from "linkify-it"
 import hr from "./rules_token/hr"
 import { infoClose, infoOpen } from "./rules_token/info"
+import { codeClose, codeOpen } from "./rules_token/code"
 import picon from "./rules_token/picon"
 import { qtClose, qtOpen } from "./rules_token/quote"
 import reply from "./rules_token/reply"
@@ -18,6 +19,8 @@ export default class Tokenizer implements ITokenizer {
     infoClose,
     titleOpen,
     titleClose,
+    codeOpen,
+    codeClose,
     hr,
     picon,
     reply,

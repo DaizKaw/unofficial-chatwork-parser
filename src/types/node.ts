@@ -22,6 +22,7 @@ export type Content =
   | Mension
   | Reply
   | Quote
+  | Code
   | Plain
 
 export interface Parent extends UnistParent {
@@ -64,4 +65,8 @@ export interface Quote extends Parent {
   type: "quote"
   aid: string
   time: number
+}
+
+export interface Code extends Parent {
+  type: "code"
 }
